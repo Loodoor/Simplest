@@ -1,0 +1,85 @@
+func foo<int>: arg1 as float
+    ret arg1 ; comme le type de retour est int, le cast est fait automatiquement
+
+func egg<void>: text as str ; le type est void car on ne renvoit rien
+    print text " is my favorite " and "tv serie" + " because Dorian !" ; concaténation de multiples manières
+end egg ; fin de la fonction, on peut indenter si on veut
+
+func drop<void>: arg as (str) ; ici on peut recevoir autant d'arguments que possible, car arg est une liste de str
+    print arg " "; on va afficher toute la liste, avec " " comme séparateur
+end drop
+
+func env<empty>:
+    cst var as int: 2
+    cst hi as string: "hello world !" ; les constantes sont accessibles de partout (uniquement si la fonction est empty)
+end env
+
+struct semiclass<void>: arg1 as int ; les struct sont toujours de type void, car ce ne sont que des objets (on peut avoir des structs de type empty)
+    cst content as int: 10
+    dyn other as int: arg1
+    
+    func init<void>: truc as int
+        ret .content + truc
+    
+    func work_on_class<float>: thing as float
+        .content = thing
+    end work_on_class
+end semiclass
+
+struct Car<void>: name as string, date as string
+    cst name as string: fromarg name else "audi"
+    cst date as string: fromarg date else "01-11-11"
+end Car
+
+struct Carbis<empty>:
+    cst name as string: "audi"
+    cst date as string: "01-11-11"
+    
+    func get_date<string>:
+        ret .date
+    
+    func get_name<string>:
+        ret .name
+end Car
+
+func test<string>: text as (str)
+    ret text.0 ; retourne le premier élément de text. si text est vide, retourne "", et envoie un warning liste vide
+
+func mainbis<empty>:
+; traitement ici :)
+; on aurait très bien pu avoir des arguments
+end mainbis
+
+func mainter<void>: first as int
+    print first
+    print env.var env.hi
+end mainter
+
+func test2<int>: truc as int
+    ret 10 + truc
+
+func do_something<empty>:
+end do_something
+
+; on ne peut pas déclarer des variables dans le scoop global (car en fait ... il n'y en a pas !)
+
+func main<empty>: ; empty veut dire qu'il n'y a pas d'arguments
+    ; c'est le point d'entrée du programme
+    dyn variable1 as int: foo 1
+    print variable1 ; 1
+    variable1: 2
+    print variable1 ; 2
+    cst variable2 as int: 0
+    print variable2 ; 0
+    variable2: 10 ; warning : impossible de modifier une constante
+    print variable2 ; 0
+    goto mainbis
+    goto mainter with 1
+    goto test2 ; ne fait rien, on saute le ret, car on ne récupère pas la valeur de retour
+    
+    dyn bidule as int: 2
+    
+    if 1 + 1 == bidule: ; code op code :
+        goto do_something
+    end if
+end main
