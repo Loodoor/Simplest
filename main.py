@@ -18,24 +18,27 @@ def main():
     comment = ';'
     tokens_cond = ["if", "elif", "else"]
     ops_cond = ["==", "!=", "<", ">", "<=", ">="]
+    vars_declaration = ["dyn", "cst"]
 
     while True:
         indentation, spaces = 0, 0
-        chars_before, type_is_next, name_is_next, value_is_next, \
-            expression_is_next, second_expr_is_next = [False] * 6
-        word = ""
+        chars_before, type_is_next, name_is_next, value_is_next, expression_is_next, \
+            second_expr_is_next, ret_value_is_next, in_argument, type_arg_is_next, \
+            name_arg_is_next = [False] * 10
+        word, last_arg_name = "", ""
 
         user_input = input("SPL> ")
 
-        replaced = {'<': 0, '>': 0, ':': 0}
+        replaced = {'<': 0, '>': 0}
         ui = list(user_input)
 
         for i in range(len(ui)):
             c = ui[i]
-            if c in '<>:' and not replaced[c]:
+            if c in replaced.keys() and not replaced[c]:
                 replaced[c] = 1
                 ui[i] = ' '
         user_input = ''.join(ui) + ' '
+        user_input.replace(':', ' : ')
 
         # traitement caractère par caractère
         for i in range(len(user_input)):
@@ -43,6 +46,13 @@ def main():
 
             if char == comment:
                 break
+
+            if not char.isspace():
+                chars_before = True
+                if char == ',' and in_argument:
+                    char = ' '
+                else:
+                    word += char
 
             if char.isspace():
                 # gestion de l'indentation
@@ -58,8 +68,12 @@ def main():
                         stack['indent'] = indentation
                         stack['structure'] = word
                         name_is_next = True
-                    elif word == "as":
+                    elif word == "as" and not in_argument:
+                        # gestion des types dans les constantes
                         type_is_next = True
+                    elif word == "as" and in_argument:
+                        # gestion des types des arguments, dans un dico séparé
+                        type_arg_is_next = True
                     elif word in tokens_cond:
                         stack['indent'] = indentation
                         stack['structure'] = word
@@ -72,8 +86,33 @@ def main():
                     elif word == ":" and second_expr_is_next:
                         # on est à la fin d'une condition
                         second_expr_is_next = False
+                    elif word == ":" and stack['structure'] in ('struct', 'func'):
+                        # on va entrer dans la liste d'arguments
+                        in_argument = True
+                        name_arg_is_next = True
+                        stack['args'] = {}
+                    elif word == "ret":
+                        # on a rencontré un token de retour
+                        stack['structure'] = "ret"
+                        ret_value_is_next = True
                     # assignation autre qu'un mot clé
                     else:
+                        if name_arg_is_next:
+                            last_arg_name = word
+                            name_arg_is_next = False
+
+                        if type_arg_is_next:
+                            stack['args'].update({last_arg_name: word})
+                            last_arg_name = ""
+                            type_arg_is_next = False
+                            name_arg_is_next = True
+
+                        if ret_value_is_next:
+                            if 'ret_expr' not in stack.keys():
+                                stack['ret_expr'] = [word]
+                            else:
+                                stack['ret_expr'].append(word)
+
                         if expression_is_next:
                             if 'expr' not in stack.keys():
                                 stack['expr'] = [word]
@@ -93,7 +132,7 @@ def main():
                         if type_is_next:
                             stack['type'] = word
                             type_is_next = False
-                            if stack['structure'] in ('dyn', 'cst'):
+                            if stack['structure'] in vars_declaration:
                                 value_is_next = True
 
                         if name_is_next:
@@ -102,9 +141,6 @@ def main():
                             if stack["structure"] == "func":
                                 type_is_next = True
                     word = ""
-            else:
-                chars_before = True
-                word += char
 
         ast.append(stack)
         print(stack)
