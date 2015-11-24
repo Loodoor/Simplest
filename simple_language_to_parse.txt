@@ -61,6 +61,14 @@ func test2<int>: truc as int
 func do_something<empty>:
 end do_something
 
+func use_cond<empty>:
+    if + 1 1 == - 4 2 then
+        print "+ 1 1 == - 4 2. condition passée"
+    elif + 1 1 >= 12 then
+        print "+ 1 1 >= 12"
+    end
+edn use_cond
+
 ; on ne peut pas déclarer des variables dans le scoop global (car en fait ... il n'y en a pas !)
 
 func main<empty>: ; empty veut dire qu'il n'y a pas d'arguments

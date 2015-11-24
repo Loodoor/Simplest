@@ -16,10 +16,13 @@ def main():
     ast = []
     keywords = ['func', 'struct', 'dyn', 'cst', 'end']
     comment = ';'
+    tokens_cond = ["if", "elif", "else"]
+    ops_cond = ["==", "!=", "<", ">", "<=", ">="]
 
     while True:
         indentation, spaces = 0, 0
-        chars_before, type_is_next, name_is_next, value_is_next = False, False, False, False
+        chars_before, type_is_next, name_is_next, value_is_next, \
+            expression_is_next, second_expr_is_next = [False] * 6
         word = ""
 
         user_input = input("SPL> ")
@@ -48,16 +51,41 @@ def main():
                     if not spaces % 4:
                         indentation += 1
                         spaces = 0
-                # gestion des mots clés extraits
+                # gestion des mots
                 if word:
+                    # gestion des mots clés
                     if word in keywords:
                         stack['indent'] = indentation
                         stack['structure'] = word
                         name_is_next = True
                     elif word == "as":
                         type_is_next = True
+                    elif word in tokens_cond:
+                        stack['indent'] = indentation
+                        stack['structure'] = word
+                        expression_is_next = True
+                    elif word in ops_cond and expression_is_next:
+                        # on est dans un opérateur d'une condition
+                        expression_is_next = False
+                        stack['op_cond'] = word
+                        second_expr_is_next = True
+                    elif word == ":" and second_expr_is_next:
+                        # on est à la fin d'une condition
+                        second_expr_is_next = False
                     # assignation autre qu'un mot clé
                     else:
+                        if expression_is_next:
+                            if 'expr' not in stack.keys():
+                                stack['expr'] = [word]
+                            else:
+                                stack['expr'].append(word)
+
+                        if second_expr_is_next:
+                            if 'expr2' not in stack.keys():
+                                stack['expr2'] = [word]
+                            else:
+                                stack['expr2'].append(word)
+
                         if value_is_next:
                             stack['value'] = word
                             value_is_next = False
@@ -69,7 +97,7 @@ def main():
                                 value_is_next = True
 
                         if name_is_next:
-                            stack['name'] = word if not stack['name'] else stack['name']
+                            stack['name'] = word
                             name_is_next = False
                             if stack["structure"] == "func":
                                 type_is_next = True
