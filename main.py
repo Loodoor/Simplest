@@ -29,16 +29,7 @@ def main():
 
         user_input = input("SPL> ")
 
-        replaced = {'<': 0, '>': 0}
-        ui = list(user_input)
-
-        for i in range(len(ui)):
-            c = ui[i]
-            if c in replaced.keys() and not replaced[c]:
-                replaced[c] = 1
-                ui[i] = ' '
-        user_input = ''.join(ui) + ' '
-        user_input.replace(':', ' : ')
+        user_input = user_input.replace(':', ' : ').replace('<', ' <')
 
         # traitement caractère par caractère
         for i in range(len(user_input)):
@@ -80,6 +71,7 @@ def main():
                         expression_is_next = True
                     elif word in ops_cond and expression_is_next:
                         # on est dans un opérateur d'une condition
+                        print('in')
                         expression_is_next = False
                         stack['op_cond'] = word
                         second_expr_is_next = True
@@ -114,20 +106,26 @@ def main():
                                 stack['ret_expr'].append(word)
 
                         if expression_is_next:
-                            if 'expr' not in stack.keys():
-                                stack['expr'] = [word]
-                            else:
-                                stack['expr'].append(word)
+                            if word != ':':
+                                if 'expr' not in stack.keys():
+                                    stack['expr'] = [word]
+                                else:
+                                    stack['expr'].append(word)
 
                         if second_expr_is_next:
-                            if 'expr2' not in stack.keys():
-                                stack['expr2'] = [word]
-                            else:
-                                stack['expr2'].append(word)
+                            if word != ':':
+                                if 'expr2' not in stack.keys():
+                                    stack['expr2'] = [word]
+                                else:
+                                    stack['expr2'].append(word)
 
                         if value_is_next:
-                            stack['value'] = word
-                            value_is_next = False
+                            if word != ':':
+                                if 'value' not in stack.keys():
+                                    stack['value'] = [word]
+                                else:
+                                    stack['value'].append(word)
+                            #value_is_next = False
 
                         if type_is_next:
                             stack['type'] = word
